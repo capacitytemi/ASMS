@@ -108,3 +108,28 @@ export interface TimetableEntry {
     teacherId: string;
     class: string;
 }
+
+export interface QuizQuestion {
+    id: string;
+    question: string;
+    options: string[];
+    correctAnswer: string;
+}
+
+export interface Quiz {
+    id: string;
+    title: string;
+    subject: string;
+    class: string;
+    teacherId: string;
+    questions: QuizQuestion[];
+}
+
+export interface QuizAttempt {
+    id: string;
+    quizId: string;
+    studentId: string;
+    answers: { questionId: string; selectedAnswer: string; }[];
+    score: number;
+    date: string;
+}

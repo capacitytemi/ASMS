@@ -11,8 +11,8 @@ interface AssignmentsProps {
     theme: Theme;
     toggleTheme: () => void;
     activeRole: Role;
-    setActiveRole: (role: Role) => void;
     onMenuClick: () => void;
+    onLogout: () => void;
 }
 
 const statusStyles = {
@@ -21,7 +21,7 @@ const statusStyles = {
     Graded: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
 };
 
-const Assignments: React.FC<AssignmentsProps> = ({ theme, toggleTheme, activeRole, setActiveRole, onMenuClick }) => {
+const Assignments: React.FC<AssignmentsProps> = ({ theme, toggleTheme, activeRole, onMenuClick, onLogout }) => {
     const [assignments, setAssignments] = useState(allAssignments);
     const [isModalOpen, setModalOpen] = useState(false);
     const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
@@ -44,7 +44,7 @@ const Assignments: React.FC<AssignmentsProps> = ({ theme, toggleTheme, activeRol
 
     return (
         <>
-            <Header title={title} theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} setActiveRole={setActiveRole} onMenuClick={onMenuClick} />
+            <Header title={title} theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} onMenuClick={onMenuClick} onLogout={onLogout} />
              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {assignments.map(assignment => (
                     <div key={assignment.id} className="bg-card dark:bg-gray-800 rounded-xl shadow-sm p-5 flex flex-col justify-between">

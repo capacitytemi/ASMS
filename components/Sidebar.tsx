@@ -1,5 +1,5 @@
 import React from 'react';
-import { HomeIcon, UsersIcon, CalendarIcon, DocumentTextIcon, ChartBarIcon, CogIcon, CashIcon, PencilIcon } from '../constants';
+import { HomeIcon, UsersIcon, CalendarIcon, DocumentTextIcon, ChartBarIcon, CogIcon, CashIcon, PencilIcon, LogoutIcon, ClipboardListIcon } from '../constants';
 import { Role, Page } from '../App';
 
 const navigationLinks: { name: Page; icon: React.FC<any>, roles: Role[] }[] = [
@@ -10,6 +10,7 @@ const navigationLinks: { name: Page; icon: React.FC<any>, roles: Role[] }[] = [
   { name: 'Fees', icon: CashIcon, roles: ['Admin', 'Accountant', 'Student', 'Parent'] },
   { name: 'Timetable', icon: CalendarIcon, roles: ['Student', 'Parent'] },
   { name: 'Assignments', icon: DocumentTextIcon, roles: ['Student', 'Parent'] },
+  { name: 'Quiz', icon: ClipboardListIcon, roles: ['Teacher', 'Student'] },
   { name: 'Settings', icon: CogIcon, roles: ['Admin'] },
 ];
 
@@ -25,9 +26,10 @@ interface SidebarProps {
     activePage: Page;
     setActivePage: (page: Page) => void;
     activeRole: Role;
+    onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, activeRole }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, activeRole, onLogout }) => {
   const visibleLinks = navigationLinks.filter(link => link.roles.includes(activeRole));
   const currentUser = roleConfig[activeRole];
 
@@ -77,6 +79,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, activeRole
               <p className={`text-xs font-bold ${currentUser.color.replace('bg-', 'text-')}`}>{activeRole}</p>
             </div>
           </div>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onLogout();
+            }}
+            className="flex items-center w-full px-4 py-2 mt-4 text-sm font-medium text-text-secondary rounded-lg dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <LogoutIcon className="w-6 h-6 mr-3" />
+            Logout
+          </a>
         </div>
     </div>
   );

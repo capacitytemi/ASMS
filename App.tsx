@@ -8,11 +8,13 @@ import ScoreEntry from './components/ScoreEntry';
 import Timetable from './components/Timetable';
 import Assignments from './components/Assignments';
 import Header from './components/Header';
+import Login from './components/Login';
+import Quiz from './components/Quiz';
 import { XIcon } from './constants';
 
 type Theme = 'light' | 'dark';
 export type Role = 'Admin' | 'Teacher' | 'Accountant' | 'Student' | 'Parent';
-export type Page = 'Dashboard' | 'Reports' | 'Fees' | 'Students' | 'Score Entry' | 'Timetable' | 'Assignments' | 'Settings';
+export type Page = 'Dashboard' | 'Reports' | 'Fees' | 'Students' | 'Score Entry' | 'Timetable' | 'Assignments' | 'Quiz' | 'Settings';
 
 
 const App: React.FC = () => {
@@ -20,6 +22,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<Theme>('light');
   const [activePage, setActivePage] = useState<Page>('Dashboard');
   const [activeRole, setActiveRole] = useState<Role>('Admin');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme | null;
@@ -42,12 +45,27 @@ const App: React.FC = () => {
     setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
+  const handleLogin = (role: Role) => {
+    setActiveRole(role);
+    setActivePage('Dashboard'); // Reset to dashboard on login
+    setIsLoggedIn(true);
+  };
+  
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
+  
+  const handleSetPage = (page: Page) => {
+    setActivePage(page);
+    setSidebarOpen(false); // Close mobile sidebar on navigation
+  }
+
   const renderPage = () => {
-    const headerProps = { theme, toggleTheme, activeRole, setActiveRole, onMenuClick: () => setSidebarOpen(true) };
+    const headerProps = { theme, toggleTheme, activeRole, onMenuClick: () => setSidebarOpen(true), onLogout: handleLogout };
     
     switch (activePage) {
       case 'Dashboard':
-        return <Dashboard {...headerProps} />;
+        return <Dashboard {...headerProps} setActivePage={handleSetPage} />;
       case 'Reports':
         return <Reports {...headerProps} />;
       case 'Fees':
@@ -60,28 +78,23 @@ const App: React.FC = () => {
         return <Assignments {...headerProps} />;
       case 'Timetable':
         return <Timetable {...headerProps} />;
+      case 'Quiz':
+        return <Quiz {...headerProps} />;
       default:
         // Fallback for non-implemented pages, ensures dashboard is always accessible
-        return <Dashboard {...headerProps} />;
+        return <Dashboard {...headerProps} setActivePage={handleSetPage} />;
     }
   };
 
-  const handleSetPage = (page: Page) => {
-    setActivePage(page);
-    setSidebarOpen(false); // Close mobile sidebar on navigation
-  }
-  
-  const handleSetRole = (role: Role) => {
-    setActiveRole(role);
-    // Reset to dashboard page on role change to avoid permission errors
-    setActivePage('Dashboard'); 
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
     <div className="flex h-screen bg-background dark:bg-gray-900">
       {/* Static sidebar for larger screens */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <Sidebar activePage={activePage} setActivePage={handleSetPage} activeRole={activeRole}/>
+        <Sidebar activePage={activePage} setActivePage={handleSetPage} activeRole={activeRole} onLogout={handleLogout} />
       </div>
 
       {/* Mobile sidebar */}
@@ -98,7 +111,7 @@ const App: React.FC = () => {
                         <XIcon className="w-6 h-6 text-white" />
                     </button>
                 </div>
-                <Sidebar activePage={activePage} setActivePage={handleSetPage} activeRole={activeRole} />
+                <Sidebar activePage={activePage} setActivePage={handleSetPage} activeRole={activeRole} onLogout={handleLogout} />
             </div>
             <div className="flex-shrink-0 w-14" aria-hidden="true"></div>
         </div>

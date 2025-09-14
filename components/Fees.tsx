@@ -12,8 +12,8 @@ interface FeesProps {
     theme: Theme;
     toggleTheme: () => void;
     activeRole: Role;
-    setActiveRole: (role: Role) => void;
     onMenuClick: () => void;
+    onLogout: () => void;
 }
 
 const statusColors = {
@@ -22,7 +22,7 @@ const statusColors = {
     Partial: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 border border-yellow-400/50',
 };
 
-const Fees: React.FC<FeesProps> = ({ theme, toggleTheme, activeRole, setActiveRole, onMenuClick }) => {
+const Fees: React.FC<FeesProps> = ({ theme, toggleTheme, activeRole, onMenuClick, onLogout }) => {
     const [feeRecords, setFeeRecords] = useState(allFeeRecords);
     const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
     const [isDetailsModalOpen, setDetailsModalOpen] = useState(false);
@@ -112,7 +112,7 @@ const Fees: React.FC<FeesProps> = ({ theme, toggleTheme, activeRole, setActiveRo
 
     return (
         <>
-            <Header title={title} theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} setActiveRole={setActiveRole} onMenuClick={onMenuClick} />
+            <Header title={title} theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} onMenuClick={onMenuClick} onLogout={onLogout} />
             
             <div className={`grid grid-cols-1 gap-6 sm:grid-cols-2 ${isStudentOrParent ? 'xl:grid-cols-3' : 'xl:grid-cols-3'}`}>
                 {feeStats.map((data) => (

@@ -5,10 +5,11 @@ import EnrollmentChart from './charts/EnrollmentChart';
 import AttendanceChart, { attendanceChartData } from './charts/AttendanceChart';
 import RecentActivity from './RecentActivity';
 import Announcements from './Announcements';
-import { UsersIcon, CashIcon, ChartBarIcon, DocumentTextIcon, PencilIcon } from '../constants';
+import { UsersIcon, CashIcon, ChartBarIcon, DocumentTextIcon, PencilIcon, ClipboardListIcon } from '../constants';
 import type { StatCardData } from '../types';
-import { Role } from '../App';
-import { allStudents, allTeachers, allFeeRecords, allReports, allAssignments, allTimetableData, LOGGED_IN_STUDENT_ID, LOGGED_IN_TEACHER_ID } from './data';
+import { Role, Page } from '../App';
+// Fix: Import `allTimetableData` which was missing.
+import { allStudents, allTeachers, allFeeRecords, allReports, allAssignments, allQuizzes, allQuizAttempts, LOGGED_IN_STUDENT_ID, LOGGED_IN_TEACHER_ID, allTimetableData } from './data';
 
 type Theme = 'light' | 'dark';
 
@@ -16,36 +17,87 @@ interface DashboardProps {
     theme: Theme;
     toggleTheme: () => void;
     activeRole: Role;
-    setActiveRole: (role: Role) => void;
     onMenuClick: () => void;
+    onLogout: () => void;
+    setActivePage: (page: Page) => void;
 }
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
 
+const StudentQuizOverview: React.FC<{setActivePage: (page: Page) => void}> = ({ setActivePage }) => {
+    const loggedInStudent = useMemo(() => allStudents.find(s => s.id === LOGGED_IN_STUDENT_ID), []);
+    const studentQuizzes = useMemo(() => allQuizzes.filter(q => q.class === loggedInStudent?.class), [loggedInStudent]);
+    const studentAttempts = useMemo(() => allQuizAttempts.filter(a => a.studentId === loggedInStudent?.id), [loggedInStudent]);
+    
+    const quizzesWithStatus = useMemo(() => {
+        return studentQuizzes.map(quiz => {
+            const attempt = studentAttempts.find(a => a.quizId === quiz.id);
+            return { ...quiz, attempt };
+        });
+    }, [studentQuizzes, studentAttempts]);
 
-const UpcomingAssignments: React.FC = () => (
-    <div className="p-5 bg-card dark:bg-gray-800 rounded-xl shadow-sm">
-      <h3 className="mb-4 text-lg font-semibold text-text-primary dark:text-gray-100">Upcoming Assignments</h3>
-      <ul className="space-y-4">
-        {allAssignments.filter(a => a.status === 'Pending').slice(0, 4).map((ass) => (
-          <li key={ass.id} className="flex items-center p-3 rounded-lg bg-primary-light dark:bg-gray-700">
-            <div className="flex-shrink-0 p-2 text-white rounded-full bg-primary">
-                <DocumentTextIcon className="w-5 h-5"/>
+    return (
+        <div className="p-5 bg-card dark:bg-gray-800 rounded-xl shadow-sm">
+            <h3 className="mb-4 text-lg font-semibold text-text-primary dark:text-gray-100">Quizzes & Assignments</h3>
+            <div className="space-y-3">
+                 {/* Quizzes */}
+                {quizzesWithStatus.slice(0, 2).map(quiz => (
+                    <div key={quiz.id} className="flex items-center justify-between p-3 rounded-lg bg-primary-light dark:bg-gray-700">
+                        <div className="flex items-center overflow-hidden">
+                            <div className="flex-shrink-0 p-2 text-white rounded-full bg-primary">
+                                <ClipboardListIcon className="w-5 h-5"/>
+                            </div>
+                            <div className="ml-3">
+                              <p className="font-semibold truncate text-text-primary dark:text-gray-200">{quiz.title}</p>
+                              <p className="text-sm text-text-secondary dark:text-gray-400">
+                                {quiz.subject} - {quiz.questions.length} questions
+                              </p>
+                            </div>
+                        </div>
+                        {quiz.attempt ? (
+                            <button onClick={() => setActivePage('Quiz')} className="flex-shrink-0 px-3 py-1 text-sm font-semibold text-green-700 bg-green-200 rounded-full whitespace-nowrap dark:bg-green-800 dark:text-green-200 hover:bg-green-300">
+                                Review ({quiz.attempt.score}/{quiz.questions.length})
+                            </button>
+                        ) : (
+                             <button onClick={() => setActivePage('Quiz')} className="flex-shrink-0 px-3 py-1 text-sm font-semibold text-white bg-secondary rounded-full whitespace-nowrap hover:bg-green-600">
+                                Take Quiz
+                            </button>
+                        )}
+                    </div>
+                ))}
+                
+                {/* Assignments */}
+                {allAssignments.filter(a => a.status === 'Pending').slice(0, 2).map((ass) => (
+                  <div key={ass.id} className="flex items-center justify-between p-3 rounded-lg bg-yellow-50 dark:bg-gray-700">
+                     <div className="flex items-center overflow-hidden">
+                        <div className="flex-shrink-0 p-2 text-white bg-yellow-500 rounded-full">
+                            <DocumentTextIcon className="w-5 h-5"/>
+                        </div>
+                        <div className="ml-3">
+                          <p className="font-semibold truncate text-text-primary dark:text-gray-200">{ass.title}</p>
+                          <p className="text-sm text-text-secondary dark:text-gray-400">
+                            Due: <span className="font-medium text-red-500">{ass.dueDate}</span>
+                          </p>
+                        </div>
+                     </div>
+                     <button onClick={() => setActivePage('Assignments')} className="flex-shrink-0 px-3 py-1 text-sm font-semibold text-yellow-700 bg-yellow-200 rounded-full whitespace-nowrap dark:bg-yellow-800 dark:text-yellow-200 hover:bg-yellow-300">
+                        View
+                    </button>
+                  </div>
+                ))}
+                {quizzesWithStatus.length === 0 && allAssignments.filter(a => a.status === 'Pending').length === 0 && (
+                  <p className="text-center text-text-secondary">No pending quizzes or assignments.</p>
+                )}
             </div>
-            <div className="ml-4">
-              <p className="font-semibold text-text-primary dark:text-gray-200">{ass.title}</p>
-              <p className="text-sm text-text-secondary dark:text-gray-400">
-                {ass.subject} - Due: <span className="font-medium text-red-500">{ass.dueDate}</span>
-              </p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-);
+             <button onClick={() => setActivePage('Quiz')} className="w-full px-4 py-2 mt-4 text-sm font-medium text-primary transition-colors duration-150 border border-primary rounded-lg dark:text-blue-300 dark:border-blue-300 hover:bg-primary-light dark:hover:bg-gray-700">
+                View All Quizzes & Assignments
+              </button>
+        </div>
+    )
+}
 
 
-const Dashboard: React.FC<DashboardProps> = ({ theme, toggleTheme, activeRole, setActiveRole, onMenuClick }) => {
+const Dashboard: React.FC<DashboardProps> = ({ theme, toggleTheme, activeRole, onMenuClick, onLogout, setActivePage }) => {
   const isStudentOrParent = activeRole === 'Student' || activeRole === 'Parent';
 
   const stats: StatCardData[] = useMemo(() => {
@@ -118,7 +170,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme, toggleTheme, activeRole, s
 
   return (
     <>
-      <Header title={getTitle()} theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} setActiveRole={setActiveRole} onMenuClick={onMenuClick} />
+      <Header title={getTitle()} theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} onMenuClick={onMenuClick} onLogout={onLogout} />
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((data) => (
           <StatCard key={data.title} data={data} />
@@ -128,7 +180,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme, toggleTheme, activeRole, s
       {activeRole === 'Student' || activeRole === 'Parent' ? (
         <div className="grid grid-cols-1 gap-6 mt-6 lg:grid-cols-3">
             <div className="lg:col-span-2">
-              <UpcomingAssignments />
+              <StudentQuizOverview setActivePage={setActivePage} />
             </div>
             <div className="lg:col-span-1">
               <Announcements />

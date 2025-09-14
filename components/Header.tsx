@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { BellIcon, SunIcon, MoonIcon, MenuIcon, ChevronDownIcon } from '../constants';
+import { BellIcon, SunIcon, MoonIcon, MenuIcon, ChevronDownIcon, LogoutIcon } from '../constants';
 import { Role } from '../App';
 
 type Theme = 'light' | 'dark';
@@ -9,8 +9,8 @@ interface HeaderProps {
   theme: Theme;
   toggleTheme: () => void;
   activeRole: Role;
-  setActiveRole: (role: Role) => void;
   onMenuClick: () => void;
+  onLogout: () => void;
 }
 
 const roleConfig: Record<Role, { name: string; avatar: string }> = {
@@ -21,8 +21,8 @@ const roleConfig: Record<Role, { name: string; avatar: string }> = {
     Parent: { name: 'Parent User', avatar: 'https://picsum.photos/id/1025/200/200' },
 };
 
-const Header: React.FC<HeaderProps> = ({ title, theme, toggleTheme, activeRole, setActiveRole, onMenuClick }) => {
-  const [isRoleDropdownOpen, setRoleDropdownOpen] = useState(false);
+const Header: React.FC<HeaderProps> = ({ title, theme, toggleTheme, activeRole, onMenuClick, onLogout }) => {
+  const [isProfileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const currentUser = roleConfig[activeRole];
@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({ title, theme, toggleTheme, activeRole, 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setRoleDropdownOpen(false);
+        setProfileDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -65,7 +65,7 @@ const Header: React.FC<HeaderProps> = ({ title, theme, toggleTheme, activeRole, 
         <div className="flex items-center space-x-4">
           <div className="relative" ref={dropdownRef}>
             <button 
-              onClick={() => setRoleDropdownOpen(prev => !prev)}
+              onClick={() => setProfileDropdownOpen(prev => !prev)}
               className="flex items-center p-2 space-x-2 text-sm font-medium text-gray-600 bg-white border rounded-full dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none"
             >
                <img
@@ -76,24 +76,22 @@ const Header: React.FC<HeaderProps> = ({ title, theme, toggleTheme, activeRole, 
               <span className='px-2'>{currentUser.name}</span>
               <ChevronDownIcon className="w-5 h-5 text-gray-400" />
             </button>
-            {isRoleDropdownOpen && (
+            {isProfileDropdownOpen && (
               <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-20">
                 <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-                  {(['Admin', 'Teacher', 'Accountant', 'Student', 'Parent'] as Role[]).map(role => (
-                     <a
-                      key={role}
+                    <a
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
-                        setActiveRole(role);
-                        setRoleDropdownOpen(false);
+                        onLogout();
+                        setProfileDropdownOpen(false);
                       }}
-                      className={`block px-4 py-2 text-sm ${activeRole === role ? 'font-bold text-primary' : 'text-gray-700 dark:text-gray-200'} hover:bg-gray-100 dark:hover:bg-gray-700`}
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       role="menuitem"
                     >
-                      Switch to {role}
+                      <LogoutIcon className="w-5 h-5 mr-3" />
+                      Logout
                     </a>
-                  ))}
                 </div>
               </div>
             )}

@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import Header from './Header';
 import type { StudentReport, Student } from '../types';
 import { Role } from '../App';
-import { PrinterIcon } from '../constants';
+import { DownloadIcon } from '../constants';
 import { allStudents, allReports, LOGGED_IN_STUDENT_ID } from './data';
 
 
@@ -11,11 +13,11 @@ interface ReportsProps {
     theme: Theme;
     toggleTheme: () => void;
     activeRole: Role;
-    setActiveRole: (role: Role) => void;
     onMenuClick: () => void;
+    onLogout: () => void;
 }
 
-const Reports: React.FC<ReportsProps> = ({ theme, toggleTheme, activeRole, setActiveRole, onMenuClick }) => {
+const Reports: React.FC<ReportsProps> = ({ theme, toggleTheme, activeRole, onMenuClick, onLogout }) => {
     const isStudentOrParent = activeRole === 'Student' || activeRole === 'Parent';
     
     const allClasses = useMemo(() => [...new Set(allStudents.map(s => s.class))].sort(), []);
@@ -42,23 +44,51 @@ const Reports: React.FC<ReportsProps> = ({ theme, toggleTheme, activeRole, setAc
         setReport(foundReport || null);
     };
 
-    const handlePrint = () => {
-      const printContents = document.getElementById("report-card")!.innerHTML;
-      const originalContents = document.body.innerHTML;
-      document.body.innerHTML = `<body class="bg-white">${printContents}</body>`;
-      window.print();
-      document.body.innerHTML = originalContents;
-      window.location.reload(); // to re-attach event listeners
+    const student = report ? allStudents.find(s => s.id === report.studentId) : null;
+
+    const handleDownloadPDF = () => {
+        const reportElement = document.getElementById("report-card");
+        if (!reportElement || !student || !report) {
+            console.error("Required elements for PDF generation are missing.");
+            return;
+        }
+
+        const downloadButton = reportElement.querySelector('.download-button');
+        if (downloadButton) (downloadButton as HTMLElement).style.display = 'none';
+
+        html2canvas(reportElement, { scale: 2, useCORS: true }).then(canvas => {
+            if (downloadButton) (downloadButton as HTMLElement).style.display = 'flex';
+            
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const canvasAspectRatio = canvas.width / canvas.height;
+            const pageAspectRatio = pdfWidth / pdfHeight;
+            let imgWidth = pdfWidth - 20;
+            let imgHeight = pdfHeight - 20;
+
+            if (canvasAspectRatio > pageAspectRatio) {
+                imgHeight = imgWidth / canvasAspectRatio;
+            } else {
+                imgWidth = imgHeight * canvasAspectRatio;
+            }
+
+            const xOffset = (pdfWidth - imgWidth) / 2;
+            const yOffset = (pdfHeight - imgHeight) / 2;
+
+            pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgWidth, imgHeight);
+            pdf.save(`Report-Card-${student.name.replace(/\s/g, '_')}-${report.term.replace(/\s/g, '_')}.pdf`);
+        });
     };
     
-    const student = report ? allStudents.find(s => s.id === report.studentId) : null;
     let title = isStudentOrParent ? "My Academic Reports" : "Academic Reports";
     if (isStudentOrParent && activeRole === 'Parent') title = "My Child's Reports";
 
 
     return (
         <>
-            <Header title={title} theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} setActiveRole={setActiveRole} onMenuClick={onMenuClick}/>
+            <Header title={title} theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} onMenuClick={onMenuClick} onLogout={onLogout}/>
 
             <div className="p-6 mb-6 bg-card dark:bg-gray-800 rounded-xl shadow-sm space-y-4 print:hidden">
                 <div className="flex justify-between items-center">
@@ -104,9 +134,9 @@ const Reports: React.FC<ReportsProps> = ({ theme, toggleTheme, activeRole, setAc
                                 <h2 className="text-2xl font-bold text-primary">{student.name}</h2>
                                 <p className="text-text-secondary dark:text-gray-400">ID: {report.studentId} | Class: {report.class}</p>
                             </div>
-                            <button onClick={handlePrint} className="flex items-center px-4 py-2 space-x-2 text-white rounded-lg bg-secondary hover:bg-green-600 print:hidden">
-                                <PrinterIcon className="w-5 h-5"/>
-                                <span>Print</span>
+                            <button onClick={handleDownloadPDF} className="download-button flex items-center px-4 py-2 space-x-2 text-white rounded-lg bg-secondary hover:bg-green-600 print:hidden">
+                                <DownloadIcon className="w-5 h-5"/>
+                                <span>Download PDF</span>
                             </button>
                         </div>
                         <div className="py-4 text-center">

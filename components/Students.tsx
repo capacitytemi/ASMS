@@ -11,13 +11,13 @@ interface StudentsProps {
     theme: Theme;
     toggleTheme: () => void;
     activeRole: Role;
-    setActiveRole: (role: Role) => void;
     onMenuClick: () => void;
+    onLogout: () => void;
 }
 
 const emptyStudent: Student = { id: '', name: '', class: '', dob: '', parentName: '', parentPhone: '' };
 
-const Students: React.FC<StudentsProps> = ({ theme, toggleTheme, activeRole, setActiveRole, onMenuClick }) => {
+const Students: React.FC<StudentsProps> = ({ theme, toggleTheme, activeRole, onMenuClick, onLogout }) => {
     const [students, setStudents] = useState(allStudents);
     const [isModalOpen, setModalOpen] = useState(false);
     const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -55,7 +55,7 @@ const Students: React.FC<StudentsProps> = ({ theme, toggleTheme, activeRole, set
     
     return (
         <>
-            <Header title="Student Management" theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} setActiveRole={setActiveRole} onMenuClick={onMenuClick} />
+            <Header title="Student Management" theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} onMenuClick={onMenuClick} onLogout={onLogout} />
             
             <div className="mt-8 bg-card dark:bg-gray-800 rounded-xl shadow-sm">
                 <div className="p-4 sm:p-6 border-b border-border dark:border-gray-700 flex justify-between items-center">

@@ -8,13 +8,13 @@ interface TimetableProps {
     theme: Theme;
     toggleTheme: () => void;
     activeRole: Role;
-    setActiveRole: (role: Role) => void;
     onMenuClick: () => void;
+    onLogout: () => void;
 }
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-const Timetable: React.FC<TimetableProps> = ({ theme, toggleTheme, activeRole, setActiveRole, onMenuClick }) => {
+const Timetable: React.FC<TimetableProps> = ({ theme, toggleTheme, activeRole, onMenuClick, onLogout }) => {
     
     const loggedInStudent = useMemo(() => allStudents.find(s => s.id === LOGGED_IN_STUDENT_ID), []);
     const studentClass = loggedInStudent?.class || 'N/A';
@@ -27,7 +27,7 @@ const Timetable: React.FC<TimetableProps> = ({ theme, toggleTheme, activeRole, s
 
     return (
         <>
-            <Header title={title} theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} setActiveRole={setActiveRole} onMenuClick={onMenuClick} />
+            <Header title={title} theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} onMenuClick={onMenuClick} onLogout={onLogout} />
             <div className="bg-card dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
                 <div className="p-4 sm:p-6 border-b border-border dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-text-primary dark:text-gray-100">{studentClass} - Class Schedule</h3>

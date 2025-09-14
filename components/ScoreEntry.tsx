@@ -9,8 +9,8 @@ interface ScoreEntryProps {
     theme: Theme;
     toggleTheme: () => void;
     activeRole: Role;
-    setActiveRole: (role: Role) => void;
     onMenuClick: () => void;
+    onLogout: () => void;
 }
 
 const subjects = ['English Language', 'Mathematics', 'Basic Science', 'Social Studies', 'Computer Science', 'Civic Education', 'Agricultural Science'];
@@ -24,7 +24,7 @@ const getGradeAndRemark = (total: number): { grade: SubjectScore['grade'], remar
     return { grade: 'F', remark: 'Fail' };
 };
 
-const ScoreEntry: React.FC<ScoreEntryProps> = ({ theme, toggleTheme, activeRole, setActiveRole, onMenuClick }) => {
+const ScoreEntry: React.FC<ScoreEntryProps> = ({ theme, toggleTheme, activeRole, onMenuClick, onLogout }) => {
     const allClasses = useMemo(() => [...new Set(allStudents.map(s => s.class))].sort(), []);
     const [selectedClass, setSelectedClass] = useState(allClasses[0] || '');
     const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -77,7 +77,7 @@ const ScoreEntry: React.FC<ScoreEntryProps> = ({ theme, toggleTheme, activeRole,
 
     return (
         <>
-            <Header title="Score Entry" theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} setActiveRole={setActiveRole} onMenuClick={onMenuClick} />
+            <Header title="Score Entry" theme={theme} toggleTheme={toggleTheme} activeRole={activeRole} onMenuClick={onMenuClick} onLogout={onLogout} />
             <div className="p-6 mb-6 bg-card dark:bg-gray-800 rounded-xl shadow-sm space-y-4">
                  <h3 className="text-lg font-semibold text-text-primary dark:text-gray-100">Select Student</h3>
                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

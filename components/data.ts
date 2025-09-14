@@ -1,4 +1,4 @@
-import type { Student, Teacher, FeeRecord, StudentReport, Assignment, TimetableEntry, Activity, Announcement, SubjectScore } from '../types';
+import type { Student, Teacher, FeeRecord, StudentReport, Assignment, TimetableEntry, Activity, Announcement, SubjectScore, Quiz, QuizAttempt } from '../types';
 
 // Helper to generate a grade and remark from a total score
 const getGradeAndRemark = (total: number): { grade: SubjectScore['grade'], remark: SubjectScore['remark'] } => {
@@ -10,8 +10,8 @@ const getGradeAndRemark = (total: number): { grade: SubjectScore['grade'], remar
     return { grade: 'F', remark: 'Fail' };
 };
 
-// Helper to generate a random report for a student
-const generateReportForStudent = (student: Student): StudentReport => {
+// Helper to generate a random report for a student for a specific term
+const generateReportForStudent = (student: Student, term: StudentReport['term']): StudentReport => {
     const subjects = ['English Language', 'Mathematics', 'Basic Science', 'Social Studies', 'Computer Science', 'Civic Education', 'Agricultural Science'];
     const scores = subjects.map(subject => {
         const test = Math.floor(Math.random() * 21) + 20; // score between 20-40
@@ -25,12 +25,12 @@ const generateReportForStudent = (student: Student): StudentReport => {
     return {
         studentId: student.id,
         class: student.class,
-        term: 'First Term',
+        term,
         year: '2023/2024',
         scores,
         termTotal,
         termAverage,
-        cumulativeAverage: termAverage, // For simplicity, first term cumulative is same as term average
+        cumulativeAverage: 0, // This will be calculated in the generation loop
         principalsRemark: termAverage > 70 ? 'An excellent performance. Keep it up.' : 'A good effort, but there is room for improvement.'
     };
 };
@@ -89,8 +89,41 @@ export const allFeeRecords: FeeRecord[] = allStudents.map((student, index) => {
     }
 });
 
-// Generate a report for every student
-export const allReports: StudentReport[] = allStudents.map(generateReportForStudent);
+// --- Generate reports for all students for all terms ---
+const terms: StudentReport['term'][] = ['First Term', 'Second Term', 'Third Term'];
+export const allReports: StudentReport[] = [];
+const studentAverages: { [studentId: string]: number[] } = {};
+
+allStudents.forEach(student => {
+    studentAverages[student.id] = [];
+    terms.forEach(term => {
+        const report = generateReportForStudent(student, term);
+
+        // Make scores slightly different per term for realism
+        report.scores.forEach(score => {
+            const fluctuation = Math.floor(Math.random() * 11) - 5; // Fluctuate by -5 to +5
+            let newTotal = score.total + fluctuation;
+            if (newTotal > 100) newTotal = 100;
+            if (newTotal < 40) newTotal = 40 + Math.floor(Math.random() * 10); // Keep scores reasonable
+            
+            score.total = newTotal;
+            const { grade, remark } = getGradeAndRemark(score.total);
+            score.grade = grade;
+            score.remark = remark;
+        });
+
+        report.termTotal = report.scores.reduce((acc, s) => acc + s.total, 0);
+        report.termAverage = report.termTotal / report.scores.length;
+
+        // Calculate cumulative average
+        studentAverages[student.id].push(report.termAverage);
+        const avgSum = studentAverages[student.id].reduce((a, b) => a + b, 0);
+        report.cumulativeAverage = avgSum / studentAverages[student.id].length;
+
+        allReports.push(report);
+    });
+});
+
 
 export const allAssignments: Assignment[] = [
     { id: 1, title: 'Algebra Worksheet I', subject: 'Mathematics', teacherId: 'T01', issuedDate: '2024-05-10', dueDate: '2024-05-17', fileUrl: '#', status: 'Graded', grade: 'A' },
@@ -149,3 +182,35 @@ export const allAnnouncements: Announcement[] = [
 
 export const LOGGED_IN_STUDENT_ID = 'JSS/23/001';
 export const LOGGED_IN_TEACHER_ID = 'T01';
+
+
+// --- QUIZ DATA ---
+export const allQuizzes: Quiz[] = [
+    {
+        id: 'QZ001',
+        title: 'Basic Algebra Quiz',
+        subject: 'Mathematics',
+        class: 'JSS 1A',
+        teacherId: 'T01',
+        questions: [
+            { id: 'Q1', question: 'What is 2 + 2 * 2?', options: ['8', '6', '4', '10'], correctAnswer: '6' },
+            { id: 'Q2', question: 'Solve for x: x + 5 = 10', options: ['2', '10', '5', '15'], correctAnswer: '5' },
+            { id: 'Q3', question: 'What is the square root of 9?', options: ['3', '81', '18', '1.5'], correctAnswer: '3' },
+        ]
+    }
+];
+
+export const allQuizAttempts: QuizAttempt[] = [
+    {
+        id: 'ATT001',
+        quizId: 'QZ001',
+        studentId: 'JSS/23/002', // Aisha Yusuf
+        answers: [
+            { questionId: 'Q1', selectedAnswer: '6' },
+            { questionId: 'Q2', selectedAnswer: '5' },
+            { questionId: 'Q3', selectedAnswer: '18' },
+        ],
+        score: 2,
+        date: '2024-05-20'
+    }
+];
